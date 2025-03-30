@@ -1,0 +1,148 @@
+<div class="container mx-auto p-4">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <h1 class="text-2xl font-bold">Gestión de Respuestas</h1>
+        <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+            <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar respuestas..."
+                class="p-2 border rounded w-full">
+            <button (click)="openAddModal()"
+                class="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded whitespace-nowrap hover:scale-105 cursor-pointer">
+                Nueva Respuesta
+            </button>
+        </div>
+    </div>
+
+    <div *ngIf="loading" class="p-8 text-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+    </div>
+
+    <div *ngIf="!loading" class="bg-white rounded-lg shadow overflow-hidden">
+        <div *ngIf="filteredResponses.length === 0" class="text-center py-8 text-gray-500">
+            No se encontraron respuestas
+        </div>
+
+        <table *ngIf="filteredResponses.length > 0" class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Intent
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patrones
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Respuestas</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <tr *ngFor="let response of filteredResponses" class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ response.id }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ response.intent || '-' }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                        <div class="truncate" [title]="response.patterns.join(', ')">
+                            {{ response.patterns.join(', ') }}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                        <div class="truncate" [title]="response.responses.join(', ')">
+                            {{ response.responses.join(', ') }}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button (click)="openEditModal(response)"
+                            class="text-blue-600 hover:text-blue-900 mr-3 hover:scale-105 cursor-pointer">
+                            Editar
+                        </button>
+                        <button (click)="deleteResponse(response.id)"
+                            class="text-red-600 hover:text-red-900 hover:scale-105 cursor-pointer">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div *ngIf="showModal"
+        class="fixed inset-0 bg-indigo-400 opacity-95 bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl w-xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <h2 class="text-xl font-bold mb-4">
+                    {{ isEditMode ? 'Editar Respuesta' : 'Nueva Respuesta' }}
+                </h2>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Intent (opcional)</label>
+                        <input type="text" [value]="currentResponses.intent || ''" (input)="updateIntent($event)"
+                            class="w-full p-2 border rounded" placeholder="Nombre del intent (ej: saludo, despedida)">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Patrones</label>
+                        <div class="space-y-2">
+                            <div *ngFor="let pattern of currentResponses.patterns; let i = index; trackBy: trackByIndex"
+                                class="flex items-center">
+                                <input type="text" [value]="pattern" (input)="updatePattern($event, i)"
+                                    class="flex-grow p-2 border rounded" placeholder="Patrón de coincidencia">
+                                <button type="button" (click)="removePattern(i)"
+                                    class="ml-2 text-red-500 hover:text-red-700 hover:scale-105 cursor-pointer"
+                                    [disabled]="currentResponses.patterns.length <= 1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" (click)="addPattern()"
+                            class="mt-2 text-sm text-blue-500 hover:text-blue-700 hover:scale-105 cursor-pointer">
+                            + Añadir patrón
+                        </button>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Respuestas</label>
+                        <div class="space-y-2">
+                            <div *ngFor="let response of currentResponses.responses; let i = index; trackBy: trackByIndex"
+                                class="flex items-start">
+                                <textarea [value]="response" (input)="updateResponse($event, i)"
+                                    class="flex-grow p-2 border rounded" rows="2"
+                                    placeholder="Texto de respuesta"></textarea>
+                                <button type="button" (click)="removeResponse(i)"
+                                    class="ml-2 text-red-500 hover:text-red-700 mt-2 hover:scale-105 cursor-pointer"
+                                    [disabled]="currentResponses.responses.length <= 1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" (click)="addResponse()"
+                            class="mt-2 text-sm text-blue-500 hover:text-blue-700 hover:scale-105 cursor-pointer">
+                            + Añadir respuesta
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" (click)="closeModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 hover:scale-105 cursor-pointer">
+                        Cancelar
+                    </button>
+                    <button type="button" (click)="saveResponse()"
+                        class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 hover:scale-105 cursor-pointer">
+                        Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

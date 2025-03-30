@@ -1,0 +1,13 @@
+<div class="flex h-full flex-col bg-gray-200">
+    <app-navbar class="fixed top-0 left-0 w-full z-20"></app-navbar>
+    <div class="pl-12 mt-32">
+      <app-breadcrumb></app-breadcrumb>
+    </div>
+    <div class="flex-1">
+      <main class="flex-1 p-6 pt-3">
+        <router-outlet></router-outlet>
+      </main>
+      <app-footer></app-footer>
+    </div>
+  </div>
+  

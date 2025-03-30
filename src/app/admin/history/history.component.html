@@ -1,0 +1,115 @@
+<div class="p-4" *ngIf="!loading; else loadingTemplate">
+  <div class="flex flex-col ml-3 justify-between items-start mb-6 gap-4">
+    <h1 class="text-2xl font-bold">Historial de Chats</h1>
+  </div>
+  <!-- Sección de Estadísticas -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white p-4 rounded-lg shadow">
+      <h3 class="text-gray-500 text-sm font-medium">Total Mensajes</h3>
+      <p class="text-2xl font-bold text-gray-900">{{stats.totalInteractions || 0}}</p>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow">
+      <h3 class="text-gray-500 text-sm font-medium">Sin Responder</h3>
+      <p class="text-2xl font-bold text-gray-900">{{stats.unansweredQuestions || 0}}</p>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow">
+      <h3 class="text-gray-500 text-sm font-medium">Efectividad</h3>
+      <p class="text-2xl font-bold text-gray-900">
+        {{(stats.avgEffectiveness || 0) | percent:'1.1-1'}}
+      </p>
+    </div>
+  </div>
+
+  <!-- Sección de Gráficos -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Gráfico de Tendencias -->
+    <div class="bg-white p-4 rounded-lg shadow">
+      <h3 class="text-lg font-semibold text-gray-800 mb-2">Tendencia Emocional</h3>
+      <div *ngIf="chartsInitialized">
+        <apx-chart [series]="trendsChartOptions.series" [chart]="trendsChartOptions.chart"
+          [colors]="trendsChartOptions.colors" [stroke]="trendsChartOptions.stroke" [xaxis]="trendsChartOptions.xaxis"
+          [yaxis]="trendsChartOptions.yaxis" [tooltip]="trendsChartOptions.tooltip">
+        </apx-chart>
+      </div>
+    </div>
+
+    <!-- Gráfico de Horas Pico -->
+    <div class="bg-white p-4 rounded-lg shadow">
+      <h3 class="text-lg font-semibold text-gray-800 mb-2">Horas Pico</h3>
+      <div *ngIf="chartsInitialized">
+        <apx-chart [series]="peakHoursChartOptions.series" [chart]="peakHoursChartOptions.chart"
+          [colors]="peakHoursChartOptions.colors" [plotOptions]="peakHoursChartOptions.plotOptions"
+          [xaxis]="peakHoursChartOptions.xaxis" [yaxis]="peakHoursChartOptions.yaxis"
+          [tooltip]="peakHoursChartOptions.tooltip">
+        </apx-chart>
+      </div>
+    </div>
+  </div>
+
+  <!-- Historial Reciente -->
+  <div class="bg-white rounded-lg shadow overflow-hidden mt-6">
+    <div class="p-4 border-b flex justify-between items-center">
+      <h3 class="text-lg font-semibold text-gray-800">Historial de Conversaciones</h3>
+      <div class="relative w-64">
+        <input [formControl]="searchControl" type="text" placeholder="Buscar por teléfono..."
+          class="pl-10 pr-4 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Teléfono</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mensaje</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Respuesta</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Emoción</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let item of filteredHistory.slice(0, 10)">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              {{item.phoneNumber}}
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+              {{item.message}}
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+              {{item.response}}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{item.timestamp | date:'short'}}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span *ngIf="item.emotionalScale !== null && item.emotionalScale !== undefined"
+                class="px-2 py-1 text-xs rounded-full" [ngClass]="{
+                      'bg-red-100 text-red-800': item.emotionalScale <= 3,
+                      'bg-yellow-100 text-yellow-800': item.emotionalScale > 3 && item.emotionalScale <= 7,
+                      'bg-green-100 text-green-800': item.emotionalScale > 7
+                    }">
+                {{item.emotionalScale}}/10
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="filteredHistory.length === 0">
+            <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+              No se encontraron conversaciones
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<ng-template #loadingTemplate>
+  <div class="flex justify-center items-center h-64">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+  </div>
+</ng-template>

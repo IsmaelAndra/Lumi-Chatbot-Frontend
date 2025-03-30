@@ -1,0 +1,13 @@
+/* Estilos básicos para el modal y la tabla */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  
+  /* Asegurar que la tabla sea responsive */
+  @media (max-width: 768px) {
+    table {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+  }
